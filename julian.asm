@@ -4,6 +4,21 @@ NumberPrompt:	.asciiz		"Enter the Julian Day: \n"
 IsLeap:		.asciiz		"The year entered is a leap year.\n"
 NotLeap:	.asciiz		"The year entered is not a leap year.\n"
 InvalidInput:	.asciiz		"The Julian Date and year combination is invalid.\n"
+Result:		.asciiz		"The date in month/day format is: "
+test:		.asciiz		"\n\n"
+
+JAN:		.asciiz		"JAN"
+FEB:		.asciiz		"FEB"
+MAR:		.asciiz		"MAR"
+APR:		.asciiz		"APR"
+MAY:		.asciiz		"MAY"
+JUN:		.asciiz		"JUN"
+JUL:		.asciiz		"JUL"
+AUG:		.asciiz		"AUG"
+SEP:		.asciiz		"SEP"
+OCT:		.asciiz		"OCT"
+NOV:		.asciiz		"NOV"
+DEC:		.asciiz		"DEC"
 
 	.text
 
@@ -14,6 +29,7 @@ main:
 
 	li	$v0, 5	#Read integer
 	syscall
+	
 	add	$a0, $v0, $zero	#Save in argument register to pass to leap year checker
 	
 	#At this point we can run $t0 through the leap year test
@@ -24,7 +40,7 @@ main:
 	#1 in $v0 if leap year, else 0
 	
 	add	$s0, $v0, $zero	#Save return value from leap year checker so we can use $v0 again
-	add	$s1, $a0, $zero	#Also save the julian nummber	
+	add	$s1, $a0, $zero	#Also save the year
 
 	li	$v0, 4
 	la	$a0, NumberPrompt
@@ -32,80 +48,301 @@ main:
 	
 	li	$v0, 5
 	syscall
-	add	$t1, $v0, $zero
+	add	$t1, $v0, $zero #$t1 is the julian num
+	add	$s2, $t1, $zero
 	
 	subi	$t2, $t1, 366
 	
-	beq	$t2, $s0 ,Invalid
-
-	#naive solution: hard code the values of each month (adding 1 after feb in leap years)
-	#see if assembly lets you define constants
-	#sub the month value, if less than 0 it is that month + day
-	#repeat, subtracting the *cumulative* month values (oh god there will be so many conditional branches)
-	#wait no fuck that, just keep a variable with the count of the month we're on and increment each time
-	#so we still have a lot of cases but at least the thing we're subtracting is clear
+	beq	$t2, $s0 ,Invalid	#if year is 366 days and it is not a leap year (0 == 0)
 
 	#Leap year or not - $s0
-	#Julian number - $s1
+	#Year - $s1
+	#Julian number - $s2
 
-	#use $t0 for month count
+	li	$v0, 4
+	la	$a0, Result
+	syscall
+
+	#use $t0 for day count
 	addi	$t0, $t0, 31
-	sub	$t1, $t0, $s1
-	blz	$t1, January
-	
-	beqz	$s0, LeapTrack
+	add	$t2, $zero, $zero
+	sub	$t1, $t0, $s2
+	bgez	$t1, January
+	add	$t2, $t0, $zero
+	beqz	$s0, NonLeapTrack
+
+LeapTrack:
+	addi	$t0, $t0, 29
+	j	AfterLeap	
 
 NonLeapTrack:
 	addi	$t0, $t0, 28
 	j	AfterLeap	
 
-LeapTrack:
-	addi	$t0, $t0, 29
-	j	AfterLeap	
+AfterLeap: #specific month labels will print their own output then exit	
+	sub	$t1, $t0, $s2
+	bgez	$t1, February
 	
-AfterLeap: specific month labels will print their own output then exit	
-	sub	$t1, $t0, $s1
-	blz	$t1, February
-
+	add	$t2, $t0, $zero
+	
 	addi	$t0, $t0, 31
-	sub	$t1, $t0, $s1
-	blz	$t1, March
+	sub	$t1, $t0, $s2
+	bgez	$t1, March
+
+	add	$t2, $t0, $zero
 
 	addi    $t0, $t0, 30
-        sub     $t1, $t0, $s1
-        blz     $t1, April 
+        sub     $t1, $t0, $s2
+        bgez    $t1, April 
+
+	add	$t2, $t0, $zero
 
 	addi    $t0, $t0, 31
-        sub     $t1, $t0, $s1
-        blz     $t1, May
+        sub     $t1, $t0, $s2
+        bgez    $t1, May
+
+	add	$t2, $t0, $zero
 
 	addi    $t0, $t0, 30
-        sub     $t1, $t0, $s1
-        blz     $t1, June
+        sub     $t1, $t0, $s2
+        bgez    $t1, June
+
+	add	$t2, $t0, $zero
 
 	addi    $t0, $t0, 31
-        sub     $t1, $t0, $s1
-        blz     $t1, July
+        sub     $t1, $t0, $s2
+        bgez    $t1, July
+
+	add	$t2, $t0, $zero
 
 	addi    $t0, $t0, 31
-        sub     $t1, $t0, $s1
-        blz     $t1, August
+        sub     $t1, $t0, $s2
+        bgez    $t1, August
+
+	add	$t2, $t0, $zero
 
 	addi    $t0, $t0, 30
-        sub     $t1, $t0, $s1
-        blz     $t1, September
+        sub     $t1, $t0, $s2
+        bgez    $t1, September
+
+	add	$t2, $t0, $zero
 
 	addi    $t0, $t0, 31
-        sub     $t1, $t0, $s1
-        blz     $t1, October
+        sub     $t1, $t0, $s2
+        bgez    $t1, October
+
+	add	$t2, $t0, $zero
 
 	addi    $t0, $t0, 30
-        sub     $t1, $t0, $s1
-        blz     $t1, November
+        sub     $t1, $t0, $s2
+        bgez    $t1, November
+
+	add	$t2, $t0, $zero
 
 	addi    $t0, $t0, 31
-        sub     $t1, $t0, $s1
-        blz     $t1, December
+        sub     $t1, $t0, $s2
+        bgez    $t1, December
+	
+January:
+	sub $t3, $s2, $t2	#subtract julian number from day count of previous months
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, JAN
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+	
+February:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, FEB
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+	
+March:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, MAR
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+	
+April:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, APR
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+	
+May:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, MAY
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+
+June:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, JUN
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+July:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, JUL
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+
+August:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, AUG
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+	
+September:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, SEP
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+	
+October:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, OCT
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+	
+November:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, NOV
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
+	
+	j Exit
+	
+December:
+	sub $t3, $s2, $t2
+	
+	li	$v0, 1
+	add	$a0, $t3, $zero
+	syscall
+	
+	li	$v0, 4
+	la	$a0, DEC
+	syscall
+	
+	li	$v0, 1
+	add	$a0, $s1, $zero
+	syscall
 	
 	j Exit
 
