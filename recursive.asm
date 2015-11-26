@@ -38,37 +38,37 @@ main:
 	
 RangeSum:
 	addi	$sp, $sp, -12
-	sw	$a0, 8($sp)
-	sw	$a1, 4($sp)
+	sw	$s0, 8($sp)
+	sw	$s1, 4($sp)
 	sw	$ra, 0($sp)
+
+	move	$s0, $a0
+	move	$s1, $a1
 
 	jal	RangeSumR
 	
 	lw	$ra, 0($sp)
-	lw	$a1, 4($sp)
-	lw	$a0, 8($sp)
-	addi	$sp, $sp, 12
+	addi	$sp, $sp, 4
 	
 	move	$t0, $v0	#max
 	
-	addi	$sp, $sp, -12
-	sw	$a0, 8($sp)
-	sw	$a1, 4($sp)
+	addi	$sp, $sp, -4
 	sw	$ra, 0($sp)
 
-	move	$a0, $a1	
+	move	$a0, $s1	
 
 	jal	RangeSumR
 	
 	lw	$ra, 0($sp)
-	lw	$a1, 4($sp)
-	lw	$a0, 8($sp)
-	addi	$sp, $sp, 12
+	addi	$sp, $sp, 4
 	
 	move	$t1, $v0	#min
 	
 	sub	$v0, $t0, $t1
-	add	$v0, $v0, $a1
+	add	$v0, $v0, $s1
+	
+	lw	$s1, 0($sp)
+	lw	$s0, 4($sp)
 	
 	jr	$ra
 
